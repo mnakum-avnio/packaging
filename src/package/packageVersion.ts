@@ -5,12 +5,14 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
+import * as os from 'os';
 import {
   Connection,
   Lifecycle,
   Messages,
   NamedPackageDir,
   PollingClient,
+  SfError,
   SfProject,
   StatusResult,
 } from '@salesforce/core';
@@ -235,7 +237,11 @@ export class PackageVersion {
     if (id.startsWith('04t')) {
       id = await getPackageVersionId(id, this.connection);
     }
-    return await this.options.connection.tooling.update('Package2Version', { IsReleased: true, Id: id });
+    const result = await this.options.connection.tooling.update('Package2Version', { IsReleased: true, Id: id });
+    if (!result.success) {
+      throw SfError.wrap(result.errors.join(os.EOL));
+    }
+    return result;
   }
 
   public update(): Promise<void> {
